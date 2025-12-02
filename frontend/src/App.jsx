@@ -2,132 +2,119 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import { obtenerPerfilPrincipal } from './api/perfil';
 
-function SeccionTitulo({ perfil }) {
+function Badge({ children }) {
+  return <span className="badge">{children}</span>;
+}
+
+function LinkItem({ label, href }) {
+  if (!href) return null;
   return (
-    <header className="cv-header">
-      {perfil.foto_url && (
-        <img src={perfil.foto_url} alt={perfil.nombre_completo} className="cv-foto" />
-      )}
-      <div>
-        <h1>{perfil.nombre_completo}</h1>
-        {perfil.titulo_profesional && <h2>{perfil.titulo_profesional}</h2>}
-        {perfil.ubicacion && <p className="muted">{perfil.ubicacion}</p>}
+    <li className="kv">
+      <span className="kv-label">{label}</span>
+      <a className="kv-value link" href={href} target="_blank" rel="noreferrer">{href}</a>
+    </li>
+  );
+}
+
+function KV({ label, value }) {
+  if (!value) return null;
+  return (
+    <li className="kv">
+      <span className="kv-label">{label}</span>
+      <span className="kv-value">{value}</span>
+    </li>
+  );
+}
+
+function Chips({ items }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="chips">
+      {items.map((i, idx) => <span key={idx} className="chip">{i}</span>)}
+    </div>
+  );
+}
+
+function Header({ perfil }) {
+  return (
+    <header className="card header">
+      <div className="header-media">
+        {perfil.foto_url ? (
+          <img className="avatar" src={perfil.foto_url} alt={perfil.nombre_completo} />
+        ) : (
+          <div className="avatar placeholder">{perfil.nombre_completo?.[0] ?? '🙂'}</div>
+        )}
+      </div>
+      <div className="header-info">
+        <h1 className="title">{perfil.nombre_completo}</h1>
+        {perfil.titulo_profesional && <h2 className="subtitle">{perfil.titulo_profesional}</h2>}
+        <div className="badges">
+          {perfil.ubicacion && <Badge>{perfil.ubicacion}</Badge>}
+          {perfil.trabajo_remoto && <Badge>Remoto</Badge>}
+          {perfil.disponibilidad && <Badge>{perfil.disponibilidad}</Badge>}
+        </div>
       </div>
     </header>
   );
 }
 
-function SeccionContacto({ perfil }) {
+function Section({ icon, title, children }) {
   return (
-    <section>
-      <h3>Contacto</h3>
-      <ul className="cv-list">
-        {perfil.correo && <li><strong>Correo:</strong> {perfil.correo}</li>}
-        {perfil.telefono && <li><strong>Teléfono:</strong> {perfil.telefono}</li>}
-        {perfil.sitio_web && <li><strong>Sitio web:</strong> <a href={perfil.sitio_web} target="_blank" rel="noreferrer">{perfil.sitio_web}</a></li>}
-        {perfil.linkedin_url && <li><strong>LinkedIn:</strong> <a href={perfil.linkedin_url} target="_blank" rel="noreferrer">{perfil.linkedin_url}</a></li>}
-        {perfil.github_url && <li><strong>GitHub:</strong> <a href={perfil.github_url} target="_blank" rel="noreferrer">{perfil.github_url}</a></li>}
-        {perfil.portafolio_url && <li><strong>Portafolio:</strong> <a href={perfil.portafolio_url} target="_blank" rel="noreferrer">{perfil.portafolio_url}</a></li>}
-      </ul>
+    <section className="card section">
+      <div className="section-head">
+        <div className="section-icon">{icon}</div>
+        <h3 className="section-title">{title}</h3>
+      </div>
+      <div className="section-body">{children}</div>
     </section>
   );
 }
 
-function ListaChips({ titulo, items }) {
+function Timeline({ items }) {
   if (!items || items.length === 0) return null;
   return (
-    <section>
-      <h3>{titulo}</h3>
-      <div className="chips">
-        {items.map((i, idx) => <span key={idx} className="chip">{i}</span>)}
-      </div>
-    </section>
-  );
-}
-
-function SeccionExperiencia({ experiencia }) {
-  if (!experiencia || experiencia.length === 0) return null;
-  return (
-    <section>
-      <h3>Experiencia</h3>
-      <ul className="cv-timeline">
-        {experiencia.map((exp, idx) => (
-          <li key={idx}>
-            <div className="cv-timeline-item">
-              <div>
-                <strong>{exp.empresa}</strong> — {exp.cargo}
-                {exp.ubicacion ? ` • ${exp.ubicacion}` : ''}
-              </div>
+    <ul className="timeline">
+      {items.map((exp, idx) => (
+        <li key={idx} className="timeline-item">
+          <div className="dot" />
+          <div className="content">
+            <div className="row">
+              <div className="bold">{exp.empresa}</div>
               <div className="muted">{exp.inicio} — {exp.fin ?? 'Actual'}</div>
-              {exp.descripcion && <p>{exp.descripcion}</p>}
-              {Array.isArray(exp.logros) && exp.logros.length > 0 && (
-                <ul className="cv-list">
-                  {exp.logros.map((l, i) => <li key={i}>{l}</li>)}
-                </ul>
-              )}
             </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function SeccionEducacion({ educacion }) {
-  if (!educacion || educacion.length === 0) return null;
-  return (
-    <section>
-      <h3>Educación</h3>
-      <ul className="cv-list">
-        {educacion.map((edu, idx) => (
-          <li key={idx}>
-            <strong>{edu.institucion}</strong> — {edu.titulo}
-            <div className="muted">{edu.inicio} — {edu.fin}</div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function SeccionProyectos({ proyectos }) {
-  if (!proyectos || proyectos.length === 0) return null;
-  return (
-    <section>
-      <h3>Proyectos</h3>
-      <ul className="cv-list">
-        {proyectos.map((p, idx) => (
-          <li key={idx}>
-            <strong>{p.nombre}</strong> — {p.rol}
-            {p.url && <> • <a href={p.url} target="_blank" rel="noreferrer">{p.url}</a></>}
-            {Array.isArray(p.tecnologias) && p.tecnologias.length > 0 && (
-              <div className="chips">
-                {p.tecnologias.map((t, i) => <span key={i} className="chip">{t}</span>)}
-              </div>
+            <div className="row">
+              <div>{exp.cargo}{exp.ubicacion ? ` • ${exp.ubicacion}` : ''}</div>
+            </div>
+            {exp.descripcion && <p className="desc">{exp.descripcion}</p>}
+            {Array.isArray(exp.logros) && exp.logros.length > 0 && (
+              <ul className="list">
+                {exp.logros.map((l, i) => <li key={i}>{l}</li>)}
+              </ul>
             )}
-            {p.descripcion && <p>{p.descripcion}</p>}
-          </li>
-        ))}
-      </ul>
-    </section>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function SeccionCertificaciones({ certificaciones }) {
-  if (!certificaciones || certificaciones.length === 0) return null;
+function Projects({ items }) {
+  if (!items || items.length === 0) return null;
   return (
-    <section>
-      <h3>Certificaciones</h3>
-      <ul className="cv-list">
-        {certificaciones.map((c, idx) => (
-          <li key={idx}>
-            <strong>{c.nombre}</strong> — {c.entidad}
-            {c.credencial_url && <> • <a href={c.credencial_url} target="_blank" rel="noreferrer">{c.credencial_url}</a></>}
-            {c.fecha && <div className="muted">{c.fecha}</div>}
-          </li>
-        ))}
-      </ul>
-    </section>
+    <ul className="projects">
+      {items.map((p, idx) => (
+        <li key={idx} className="project">
+          <div className="project-head">
+            <div className="project-title">
+              <span className="bold">{p.nombre}</span> • {p.rol}
+            </div>
+            {p.url && <a className="link" href={p.url} target="_blank" rel="noreferrer">Visitar</a>}
+          </div>
+          {p.descripcion && <p className="desc">{p.descripcion}</p>}
+          {Array.isArray(p.tecnologias) && p.tecnologias.length > 0 && <Chips items={p.tecnologias} />}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -140,12 +127,10 @@ export default function App() {
     (async () => {
       try {
         const p = await obtenerPerfilPrincipal();
-        if (!p) {
-          setErrorMsg('No hay datos de perfil en Supabase.');
-        } else {
-          setPerfil(p);
-        }
+        if (!p) setErrorMsg('No hay datos de perfil en Supabase.');
+        else setPerfil(p);
       } catch (e) {
+        console.error(e);
         setErrorMsg('Error cargando perfil.');
       } finally {
         setLoading(false);
@@ -153,32 +138,88 @@ export default function App() {
     })();
   }, []);
 
-  if (loading) return <div className="container"><p>Cargando…</p></div>;
-  if (errorMsg) return <div className="container"><p>{errorMsg}</p></div>;
-  if (!perfil) return <div className="container"><p>Sin datos.</p></div>;
-
   return (
-    <main className="container">
-      <SeccionTitulo perfil={perfil} />
+    <div className="page">
+      <div className="bg-gradient" />
+      <div className="container">
+        {loading && <div className="card skeleton">Cargando…</div>}
+        {!loading && errorMsg && <div className="card error">{errorMsg}</div>}
+        {!loading && perfil && (
+          <>
+            <Header perfil={perfil} />
 
-      {perfil.resumen && (
-        <section>
-          <h3>Resumen</h3>
-          <p>{perfil.resumen}</p>
-        </section>
-      )}
+            {perfil.resumen && (
+              <Section icon="📝" title="Resumen">
+                <p className="desc big">{perfil.resumen}</p>
+              </Section>
+            )}
 
-      <SeccionContacto perfil={perfil} />
+            <Section icon="📬" title="Contacto">
+              <ul className="kvs">
+                <KV label="Correo" value={perfil.correo} />
+                <KV label="Teléfono" value={perfil.telefono} />
+                <LinkItem label="Sitio web" href={perfil.sitio_web} />
+                <LinkItem label="LinkedIn" href={perfil.linkedin_url} />
+                <LinkItem label="GitHub" href={perfil.github_url} />
+                <LinkItem label="Portafolio" href={perfil.portafolio_url} />
+              </ul>
+            </Section>
 
-      <ListaChips titulo="Idiomas" items={perfil.idiomas ?? []} />
-      <ListaChips titulo="Habilidades técnicas" items={perfil.habilidades ?? []} />
-      <ListaChips titulo="Habilidades blandas" items={perfil.soft_skills ?? []} />
-      <ListaChips titulo="Intereses" items={perfil.intereses ?? []} />
+            <Section icon="🌐" title="Idiomas">
+              <Chips items={perfil.idiomas ?? []} />
+            </Section>
 
-      <SeccionExperiencia experiencia={perfil.experiencia ?? []} />
-      <SeccionEducacion educacion={perfil.educacion ?? []} />
-      <SeccionProyectos proyectos={perfil.proyectos ?? []} />
-      <SeccionCertificaciones certificaciones={perfil.certificaciones ?? []} />
-    </main>
+            <Section icon="🧠" title="Habilidades técnicas">
+              <Chips items={perfil.habilidades ?? []} />
+            </Section>
+
+            <Section icon="🤝" title="Habilidades blandas">
+              <Chips items={perfil.soft_skills ?? []} />
+            </Section>
+
+            <Section icon="💼" title="Experiencia">
+              <Timeline items={perfil.experiencia ?? []} />
+            </Section>
+
+            <Section icon="🎓" title="Educación">
+              <ul className="list">
+                {(perfil.educacion ?? []).map((edu, idx) => (
+                  <li key={idx}>
+                    <div className="row">
+                      <div className="bold">{edu.institucion}</div>
+                      <div className="muted">{edu.inicio} — {edu.fin}</div>
+                    </div>
+                    <div>{edu.titulo}</div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+
+            <Section icon="🧩" title="Proyectos">
+              <Projects items={perfil.proyectos ?? []} />
+            </Section>
+
+            <Section icon="🏅" title="Certificaciones">
+              <ul className="list">
+                {(perfil.certificaciones ?? []).map((c, idx) => (
+                  <li key={idx}>
+                    <div className="row">
+                      <div className="bold">{c.nombre}</div>
+                      <div className="muted">{c.fecha}</div>
+                    </div>
+                    <div>{c.entidad} {c.credencial_url && <>• <a className="link" href={c.credencial_url} target="_blank" rel="noreferrer">Credencial</a></>}</div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+
+            <footer className="footer">
+              <div>Actualizado: {new Date(perfil.actualizado_en).toLocaleDateString()}</div>
+              <div className="muted">Hecho con Vite + React + Supabase</div>
+            </footer>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
