@@ -51,12 +51,12 @@ body {
 }
 
 .wrap {
-  position: relative; 
+  position: relative;
   z-index: 1;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 24px 16px 80px;
   width: 100%;
+  max-width: 100%;
+  margin: 36px auto 80px;
+  padding: 0 24px;
 }
 
 @media (min-width: 768px) {
@@ -677,4 +677,19 @@ body {
 
 .bullets li {
   margin: 4px 0;
+}
+
+/* Layout principal en una columna */
+.single {
+  width: 100%;
+  max-width: 1200px;        /* ajusta si quieres más/menos ancho */
+  margin: 0 auto;           /* centra PERFECTAMENTE el bloque principal */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Asegurar que todas las tarjetas ocupen todo el ancho dentro de .single */
+.single .card {
+  width: 100%;
 }
