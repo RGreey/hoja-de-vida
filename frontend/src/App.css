@@ -50,9 +50,10 @@ body {
   pointer-events: none;
 }
 
-. wrap {
-  position: relative; z-index: 1;
-  max-width: 860px;
+.wrap {
+  position: relative; 
+  z-index: 1;
+  max-width: 100%;
   margin: 0 auto;
   padding: 24px 16px 80px;
   width: 100%;
@@ -60,7 +61,20 @@ body {
 
 @media (min-width: 768px) {
   .wrap {
-    padding: 36px 24px 80px;
+    padding: 36px 32px 80px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .wrap {
+    padding: 36px 48px 80px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .wrap {
+    max-width: 1400px;
+    padding: 36px 64px 80px;
   }
 }
 
@@ -102,7 +116,7 @@ body {
   font-size: 0.9rem;
   white-space: nowrap;
 }
-.btn-ghost:hover { border-color: var(--primary); box-shadow: 0 6px 16px #6d79ff44; }
+. btn-ghost:hover { border-color: var(--primary); box-shadow: 0 6px 16px #6d79ff44; }
 
 /* Grid principal 12 columnas */
 .grid {
@@ -149,7 +163,7 @@ body {
   }
 }
 
-.header-left { 
+. header-left { 
   display: flex; 
   align-items: center; 
   justify-content: center; 
@@ -343,7 +357,7 @@ body {
 }
 
 @media (min-width: 640px) {
-  . chip {
+  .chip {
     padding: 8px 12px;
     font-size: 0.9rem;
   }
@@ -500,7 +514,7 @@ body {
 .edu-title { font-weight: 700; margin-top: 4px; font-size: 0.95rem; }
 
 /* Proyectos */
-. projects-grid { 
+.projects-grid { 
   display: grid; 
   grid-template-columns: 1fr; 
   gap: 12px; 
@@ -544,7 +558,7 @@ body {
   font-size: 0.85rem;
 }
 
-. btn-link:hover { 
+.btn-link:hover { 
   border-color: var(--info); 
   box-shadow: 0 4px 12px #4ea1ff33; 
 }
