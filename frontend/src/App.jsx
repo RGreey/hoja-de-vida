@@ -81,6 +81,7 @@ function Skeleton({ lines = 5 }) {
 }
 
 /* Header */
+/* Header */
 function Header({ perfil }) {
   const initials = useMemo(() => {
     const n = perfil?.nombre_completo || '';
@@ -90,36 +91,58 @@ function Header({ perfil }) {
     return (a + b) || '🙂';
   }, [perfil?.nombre_completo]);
 
-  // Prioridad foto: local /public/avatar.jpg -> Supabase foto_url -> placeholder
-  const localAvatar = '/avatar.jpg';
-  const avatarSrc = perfil?.foto_url ? perfil.foto_url : localAvatar;
+  /*
+    ➤ Prioridad realista:
+      1. /avatar.jpg local
+      2. foto_url desde Supabase
+      3. Placeholder con iniciales
+  */
+  const [avatarSrc, setAvatarSrc] = useState('/avatar.jpg');
+
+  useEffect(() => {
+    // si existe foto en supabase, la usamos como 2º fallback
+    if (perfil?.foto_url) {
+      const img = new Image();
+      img.src = perfil.foto_url;
+      img.onload = () => setAvatarSrc(perfil.foto_url);
+      img.onerror = () => {}; // si falla, dejamos /avatar.jpg
+    }
+  }, [perfil?.foto_url]);
 
   return (
     <header className="card header">
       <div className="header-left">
-        {avatarSrc ? (
-          <img className="avatar" src={avatarSrc} alt={perfil?.nombre_completo || 'Avatar'} onError={(e) => {
-            // si avatar local no existe y foto_url tampoco sirve, muestra placeholder
-            e.currentTarget.style.display = 'none';
-            const ph = e.currentTarget.nextElementSibling;
-            if (ph) ph.classList.remove('hidden');
-          }} />
-        ) : null}
-        <div className="avatar placeholder hidden" aria-hidden="true">{initials}</div>
+        <img
+          className="avatar"
+          src={avatarSrc}
+          alt={perfil?.nombre_completo || 'Avatar'}
+          onError={() => setAvatarSrc(null)} // si falla todo → mostrar iniciales
+        />
+
+        {avatarSrc === null && (
+          <div className="avatar placeholder">{initials}</div>
+        )}
       </div>
+
       <div className="header-right">
         <h1 className="title">{perfil?.nombre_completo}</h1>
-        {perfil?.titulo_profesional && <h2 className="subtitle">{perfil.titulo_profesional}</h2>}
+        {perfil?.titulo_profesional && (
+          <h2 className="subtitle">{perfil.titulo_profesional}</h2>
+        )}
+
         <div className="badges">
           {perfil?.ubicacion && <Badge>{perfil.ubicacion}</Badge>}
           {perfil?.trabajo_remoto && <Badge>Remoto</Badge>}
           {perfil?.disponibilidad && <Badge>{perfil.disponibilidad}</Badge>}
-          {!!perfil?.salario_deseado && <Badge>Salario deseado {moneyCOP(perfil.salario_deseado)}</Badge>}
+          {!!perfil?.salario_deseado && (
+            <Badge>Salario deseado {moneyCOP(perfil.salario_deseado)}</Badge>
+          )}
         </div>
       </div>
     </header>
   );
 }
+
 
 /* Section shell */
 function Section({ title, icon, children }) {
@@ -201,8 +224,10 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState('');
 
   const [theme, setTheme] = useState(() => {
-    return window.matchMedia?.matches && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
+    return prefersDark ? 'dark' : 'light';
+});
+
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
