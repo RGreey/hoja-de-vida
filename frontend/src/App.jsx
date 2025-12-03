@@ -3,14 +3,14 @@ import './App.css';
 import { obtenerPerfilPrincipal } from './api/perfil';
 
 /*
-  Hoja de vida premium
-  - Layout centrado y simétrico
-  - Grid 12 columnas responsive (como un sistema clásico de diseño)
-  - Tarjetas con glass suave, sombras realistas y bordes redondeados
+  Hoja de vida – versión centrada en UNA COLUMNA
+  - Layout 1 columna centrada (sin espacio vacío a la derecha)
+  - Ancho cómodo y responsivo (max 860px)
+  - Tarjetas con estilo “neumorphism suave”
   - Tipografía y jerarquía cuidadas
-  - Modo claro/oscuro con toggle manual y auto por sistema
-  - Secciones: Header, Contacto, Resumen, Skills, Experiencia, Educación, Proyectos, Certificaciones, Intereses, Redes extra
-  - Animaciones y microinteracciones sutiles
+  - Modo claro/oscuro con toggle manual + auto por sistema
+  - Foto local desde /public/avatar.jpg por defecto, con fallback a Supabase foto_url
+  - Secciones: Header, Resumen rápido, Resumen, Contacto, Idiomas, Skills, Experiencia, Educación, Proyectos, Certificaciones, Intereses, Redes extra, Footer
 */
 
 /* Utils */
@@ -90,14 +90,22 @@ function Header({ perfil }) {
     return (a + b) || '🙂';
   }, [perfil?.nombre_completo]);
 
+  // Prioridad foto: local /public/avatar.jpg -> Supabase foto_url -> placeholder
+  const localAvatar = '/avatar.jpg';
+  const avatarSrc = perfil?.foto_url ? perfil.foto_url : localAvatar;
+
   return (
     <header className="card header">
       <div className="header-left">
-        {perfil?.foto_url ? (
-          <img className="avatar" src={perfil.foto_url} alt={perfil.nombre_completo} />
-        ) : (
-          <div className="avatar placeholder" aria-hidden="true">{initials}</div>
-        )}
+        {avatarSrc ? (
+          <img className="avatar" src={avatarSrc} alt={perfil?.nombre_completo || 'Avatar'} onError={(e) => {
+            // si avatar local no existe y foto_url tampoco sirve, muestra placeholder
+            e.currentTarget.style.display = 'none';
+            const ph = e.currentTarget.nextElementSibling;
+            if (ph) ph.classList.remove('hidden');
+          }} />
+        ) : null}
+        <div className="avatar placeholder hidden" aria-hidden="true">{initials}</div>
       </div>
       <div className="header-right">
         <h1 className="title">{perfil?.nombre_completo}</h1>
@@ -114,9 +122,9 @@ function Header({ perfil }) {
 }
 
 /* Section shell */
-function Section({ title, icon, children, className = '' }) {
+function Section({ title, icon, children }) {
   return (
-    <section className={`card section ${className}`}>
+    <section className="card section">
       <div className="section-head">
         <div className="section-icon" aria-hidden="true">{icon}</div>
         <h3 className="section-title">{title}</h3>
@@ -231,146 +239,122 @@ export default function App() {
           </div>
         </div>
 
-        {/* Grid principal 12 columnas */}
-        <main className="grid">
-          {/* Estado */}
-          {loading && (
-            <>
-              <Skeleton lines={6} />
-              <Skeleton lines={4} />
-              <Skeleton lines={10} />
-            </>
-          )}
-          {!loading && errorMsg && <div className="card error">{errorMsg}</div>}
+        {/* Estado */}
+        {loading && (
+          <>
+            <Skeleton lines={6} />
+            <Skeleton lines={4} />
+            <Skeleton lines={10} />
+          </>
+        )}
+        {!loading && errorMsg && <div className="card error">{errorMsg}</div>}
 
-          {!loading && perfil && (
-            <>
-              {/* Header: ocupa 12 columnas */}
-              <div className="col-12"><Header perfil={perfil} /></div>
+        {/* Contenido UNA COLUMNA */}
+        {!loading && perfil && (
+          <main className="single">
+            <Header perfil={perfil} />
 
-              {/* Resumen quick stats: 12 columnas */}
-              <div className="col-12">
-                <Section title="Resumen rápido" icon="📈">
-                  <div className="stats">
-                    <div className="stat">
-                      <div className="stat-value">{Array.isArray(perfil.experiencia) ? perfil.experiencia.length : 0}</div>
-                      <div className="stat-label">Experiencias</div>
-                    </div>
-                    <div className="stat">
-                      <div className="stat-value">{Array.isArray(perfil.proyectos) ? perfil.proyectos.length : 0}</div>
-                      <div className="stat-label">Proyectos</div>
-                    </div>
-                    <div className="stat">
-                      <div className="stat-value">{Array.isArray(perfil.certificaciones) ? perfil.certificaciones.length : 0}</div>
-                      <div className="stat-label">Certificaciones</div>
-                    </div>
-                    <div className="stat">
-                      <div className="stat-value">{Array.isArray(perfil.habilidades) ? perfil.habilidades.length : 0}</div>
-                      <div className="stat-label">Skills</div>
-                    </div>
-                  </div>
-                </Section>
+            <Section title="Resumen rápido" icon="📈">
+              <div className="stats">
+                <div className="stat">
+                  <div className="stat-value">{Array.isArray(perfil.experiencia) ? perfil.experiencia.length : 0}</div>
+                  <div className="stat-label">Experiencias</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-value">{Array.isArray(perfil.proyectos) ? perfil.proyectos.length : 0}</div>
+                  <div className="stat-label">Proyectos</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-value">{Array.isArray(perfil.certificaciones) ? perfil.certificaciones.length : 0}</div>
+                  <div className="stat-label">Certificaciones</div>
+                </div>
+                <div className="stat">
+                  <div className="stat-value">{Array.isArray(perfil.habilidades) ? perfil.habilidades.length : 0}</div>
+                  <div className="stat-label">Skills</div>
+                </div>
               </div>
+            </Section>
 
-              {/* Izquierda 6 cols: Resumen, Experiencia, Educación */}
-              <div className="col-12 col-lg-6">
-                {perfil.resumen && (
-                  <Section title="Resumen" icon="📝">
-                    <p className="lead">{perfil.resumen}</p>
-                  </Section>
-                )}
-                <Section title="Experiencia" icon="💼">
-                  <Timeline items={perfil.experiencia ?? []} />
-                </Section>
-                <Section title="Educación" icon="🎓">
-                  <ul className="edu">
-                    {(perfil.educacion ?? []).map((edu, i) => (
-                      <li key={i} className="edu-item">
-                        <div className="edu-row">
-                          <span className="edu-inst">{edu.institucion}</span>
-                          <span className="edu-dates">{edu.inicio} — {edu.fin}</span>
-                        </div>
-                        <div className="edu-title">{edu.titulo}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </Section>
+            {perfil.resumen && (
+              <Section title="Resumen" icon="📝">
+                <p className="lead">{perfil.resumen}</p>
+              </Section>
+            )}
+
+            <Section title="Contacto" icon="📬">
+              <ul className="kvs">
+                <KV label="Correo" value={perfil.correo} />
+                <KV label="Teléfono" value={perfil.telefono} />
+                <LinkItem label="Sitio web" href={perfil.sitio_web} />
+                <LinkItem label="LinkedIn" href={perfil.linkedin_url} />
+                <LinkItem label="GitHub" href={perfil.github_url} />
+                <LinkItem label="Portafolio" href={perfil.portafolio_url} />
+              </ul>
+            </Section>
+
+            <Section title="Idiomas" icon="🌐">
+              <Chips items={perfil.idiomas ?? []} />
+            </Section>
+
+            <Section title="Habilidades técnicas" icon="🧠">
+              <Chips items={perfil.habilidades ?? []} />
+            </Section>
+
+            <Section title="Habilidades blandas" icon="🤝">
+              <Chips items={perfil.soft_skills ?? []} />
+            </Section>
+
+            <Section title="Intereses" icon="✨">
+              <div className="tags">
+                {(perfil.intereses ?? []).map((t, i) => (
+                  <span key={i} className="tag">{t}</span>
+                ))}
               </div>
+            </Section>
 
-              {/* Derecha 6 cols: Contacto, Skills, Intereses, Proyectos, Certificaciones */}
-              <div className="col-12 col-lg-6">
-                <Section title="Contacto" icon="📬">
-                  <ul className="kvs">
-                    <KV label="Correo" value={perfil.correo} />
-                    <KV label="Teléfono" value={perfil.telefono} />
-                    <LinkItem label="Sitio web" href={perfil.sitio_web} />
-                    <LinkItem label="LinkedIn" href={perfil.linkedin_url} />
-                    <LinkItem label="GitHub" href={perfil.github_url} />
-                    <LinkItem label="Portafolio" href={perfil.portafolio_url} />
-                  </ul>
-                </Section>
+            <Section title="Experiencia" icon="💼">
+              <Timeline items={perfil.experiencia ?? []} />
+            </Section>
 
-                <Section title="Idiomas" icon="🌐">
-                  <Chips items={perfil.idiomas ?? []} />
-                </Section>
+            <Section title="Educación" icon="🎓">
+              <ul className="edu">
+                {(perfil.educacion ?? []).map((edu, i) => (
+                  <li key={i} className="edu-item">
+                    <div className="edu-row">
+                      <span className="edu-inst">{edu.institucion}</span>
+                      <span className="edu-dates">{edu.inicio} — {edu.fin}</span>
+                    </div>
+                    <div className="edu-title">{edu.titulo}</div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
 
-                <Section title="Habilidades técnicas" icon="🧠">
-                  <Chips items={perfil.habilidades ?? []} />
-                </Section>
+            <Section title="Proyectos" icon="🧩">
+              <Projects items={perfil.proyectos ?? []} />
+            </Section>
 
-                <Section title="Habilidades blandas" icon="🤝">
-                  <Chips items={perfil.soft_skills ?? []} />
-                </Section>
+            <Section title="Certificaciones" icon="🏅">
+              <ul className="certs">
+                {(perfil.certificaciones ?? []).map((c, i) => (
+                  <li key={i} className="cert-item">
+                    <div className="cert-row">
+                      <span className="cert-name">{c.nombre}</span>
+                      <span className="cert-date">{c.fecha}</span>
+                    </div>
+                    <div className="cert-detail">
+                      {c.entidad}
+                      {c.credencial_url && <> • <a className="link" href={c.credencial_url} target="_blank" rel="noreferrer">Credencial</a></>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Section>
 
-                <Section title="Intereses" icon="✨">
-                  <div className="tags">
-                    {(perfil.intereses ?? []).map((t, i) => (
-                      <span key={i} className="tag">{t}</span>
-                    ))}
-                  </div>
-                </Section>
-
-                <Section title="Proyectos" icon="🧩">
-                  <Projects items={perfil.proyectos ?? []} />
-                </Section>
-
-                <Section title="Certificaciones" icon="🏅">
-                  <ul className="certs">
-                    {(perfil.certificaciones ?? []).map((c, i) => (
-                      <li key={i} className="cert-item">
-                        <div className="cert-row">
-                          <span className="cert-name">{c.nombre}</span>
-                          <span className="cert-date">{c.fecha}</span>
-                        </div>
-                        <div className="cert-detail">
-                          {c.entidad}
-                          {c.credencial_url && <> • <a className="link" href={c.credencial_url} target="_blank" rel="noreferrer">Credencial</a></>}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </Section>
-
-                {perfil?.redes_extra && Object.keys(perfil.redes_extra).length > 0 && (
-                  <Section title="Redes extra" icon="🔗">
-                    <ul className="kvs">
-                      {Object.entries(perfil.redes_extra).map(([k, v], i) => (
-                        <li key={i} className="kv">
-                          <span className="kv-label">{k}</span>
-                          <a className="kv-value link" href={v} target="_blank" rel="noreferrer">{v}</a>
-                        </li>
-                      ))}
-                    </ul>
-                  </Section>
-                )}
-              </div>
-
-              {/* Footer ocupa 12 columnas */}
-              <div className="col-12"><Footer perfil={perfil} /></div>
-            </>
-          )}
-        </main>
+            <Footer perfil={perfil} />
+          </main>
+        )}
       </div>
     </div>
   );
-} 
+}
